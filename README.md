@@ -16,7 +16,6 @@
 3. $ cd build
 4. $ cmake ..
 5. $ make
-6. $ sudo make install
 7. $ make doc (optional for generating documentation)
 
 #########
@@ -25,9 +24,9 @@
 
 lab_mono_calibration [IMAGEPATH] [IMAGEEXP] [YMLPATH] -[OPTIONS]
 
-- ./bin/lab_mono_calibration pathToImageFolder cam1_image%05d.png pathToYMLFile.yml       | using a sequence of images
-- ./bin/lab_mono_calibration pathToImageFolder calibration_vid.mp4 pathToYMLFile.yml      | using a video
-- ./bin/lab_mono_calibration /dev video0 pathToYMLFile.yml                                | using the camera
+- ./lab_mono_calibration pathToImageFolder cam1_image%05d.png pathToYMLFile.yml       | using a sequence of images
+- ./lab_mono_calibration pathToImageFolder calibration_vid.mp4 pathToYMLFile.yml      | using a video
+- ./lab_mono_calibration /dev video0 pathToYMLFile.yml                                | using the camera
  
 #####################
 # Supported options #
