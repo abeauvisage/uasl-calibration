@@ -42,7 +42,7 @@ bool findOrigin(const cv::Point2f& pt1, const cv::Point2f& pt2){
     return !minIdx;
 }
 
-void calcPatternPosition(std::vector<cv::Point3f>& corners,CalibParams params=CalibParams())
+void calcPatternPosition(std::vector<cv::Point3f>& corners,CalibParams& params)
 {
     corners.clear();
 
@@ -226,17 +226,18 @@ bool findPyramid(const cv::Mat& img, std::vector<cv::Point2f>& centers){
     return ratio1 && ratio2 && ratio3 && corner1 && corner2 && corner3 && corner4;
 }
 
-std::vector<std::vector<cv::Point2f>> findPattern(const std::string& pathToImages, std::vector<int>& image_idx, CalibParams params){
+std::vector<std::vector<cv::Point2f>> findPattern(const std::string& pathToImages, std::vector<int>& image_idx, CalibParams& params){
 
     cv::VideoCapture cap(pathToImages+"/"+params.cam_name);
+	std::cout << "[Calibration] opening " << pathToImages+"/"+params.cam_name << std::endl;
     std::vector<std::vector<cv::Point2f>> imagePoints;
     image_idx.clear();
     cv::namedWindow("calibration",cv::WINDOW_NORMAL);
     if(!cap.isOpened()){
         std::cerr << "could not open video or find images. exiting..." << std::endl;
         exit(-1);
-    }else
-        params.image_size.height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);params.image_size.width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    }else{
+        params.image_size.height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);params.image_size.width = cap.get(cv::CAP_PROP_FRAME_WIDTH);}
 
     cv::Mat img, rimg;
     cap >> img;
@@ -293,10 +294,11 @@ std::vector<std::vector<cv::Point2f>> findPattern(const std::string& pathToImage
         for(int i=0;i<params.interval;i++)
             cap >> img;
     }
+	cap.release();
     return imagePoints;
 }
 
-void findPatternStereo(const std::string& pathToImages, std::vector<std::vector<cv::Point2f>>& leftPoints, std::vector<std::vector<cv::Point2f>>& rightPoints, CalibParams params){
+void findPatternStereo(const std::string& pathToImages, std::vector<std::vector<cv::Point2f>>& leftPoints, std::vector<std::vector<cv::Point2f>>& rightPoints, CalibParams& params){
 
     leftPoints.clear();rightPoints.clear();
     cv::namedWindow("cleft",cv::WINDOW_NORMAL);cv::namedWindow("cright",cv::WINDOW_NORMAL);

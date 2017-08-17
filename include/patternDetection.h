@@ -43,7 +43,7 @@ bool findOrigin(const cv::Point2f& pt1, const cv::Point2f& pt2);
 //! Calculates the 3D location of the features forming the calibration pattern
 /*! Input: - params, set of calibration parameters.
     Ouput: - corners, the vector of 3D features.*/
-void calcPatternPosition(std::vector<cv::Point3f>& corners,CalibParams params);
+void calcPatternPosition(std::vector<cv::Point3f>& corners, CalibParams& params);
 //! Displays the pyramid pattern.
 /*! Helps to see if the pattern has been well detected or not. */
 void drawPyramidPattern(cv::Mat& img, std::vector<cv::Point2f>& centers, bool found);
@@ -53,9 +53,9 @@ void drawPyramidPattern(cv::Mat& img, std::vector<cv::Point2f>& centers, bool fo
             - found, true if detected properly, false otherwise.*/
 bool findPyramid(const cv::Mat& img, std::vector<cv::Point2f>& centers);
 //! Open images, detect the calibration pattern and display it.
-std::vector<std::vector<cv::Point2f>> findPattern(const std::string& pathToImages, std::vector<int>& image_idx, CalibParams params=CalibParams());
+std::vector<std::vector<cv::Point2f>> findPattern(const std::string& pathToImages, std::vector<int>& image_idx, CalibParams& params);
 //! Open images, detect the calibration pattern and display it.
-void findPatternStereo(const std::string& pathToImages, std::vector<std::vector<cv::Point2f>>& leftPoints, std::vector<std::vector<cv::Point2f>>& rightPoints, CalibParams params=CalibParams());
+void findPatternStereo(const std::string& pathToImages, std::vector<std::vector<cv::Point2f>>& leftPoints, std::vector<std::vector<cv::Point2f>>& rightPoints, CalibParams& params);
 //! Computes the Mean Reprojection Error.
 /*! reproject 3D points into the images plane and compute the mean error for all the calibration images.*/
 double computeMRE(const std::vector<std::vector<cv::Point3f>>& objectPoints, const std::vector<std::vector<cv::Point2f>>& imagePts, const std::vector<cv::Mat>& rvecs, const std::vector<cv::Mat>& tvecs, const cv::Mat& K, const cv::Mat& dist, std::vector<double>& repValues);

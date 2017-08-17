@@ -7,7 +7,7 @@
 using namespace cv;
 using namespace std;
 
-void mono_calibrate(string pathToImages, string filename, CalibParams params){
+void mono_calibrate(string pathToImages, string filename, CalibParams& params){
     //creating 3D structure of the pattern and detecting the corresponding 2D features
     vector<Point3f> structureBoard; //3D features of the chessboard (by default, z=0)
     vector<int> images_idx; // images where the pattern is found
@@ -21,6 +21,8 @@ void mono_calibrate(string pathToImages, string filename, CalibParams params){
         cerr << filename << endl;
         exit(-1);
     }
+
+	cout << "[Calibration] " << params.image_size << endl;
 
     vector<vector<Point3f>> objectPoints(imagePoints.size(),structureBoard);
 
@@ -66,41 +68,45 @@ void mono_calibrate(string pathToImages, string filename, CalibParams params){
     cout << "[Calibration] parameters written in: " << filename << endl;
 }
 
-void mono_rectify(string pathToImages, string rectFolder, string filename,CalibParams params){
+void mono_rectify(string pathToImages, string rectFolder, string filename,CalibParams& params){
 
     FileStorage paramsFile(filename, FileStorage::READ);
     namedWindow("rectified",WINDOW_NORMAL);
     if(!paramsFile.isOpened()){
-        cerr << "[Calibration] yml file could not be opened." << endl;
+        cerr << "[error] yml file could not be opened." << endl;
         exit(-1);
     }
 
-    Mat cameraMatrix = Mat::eye(3, 3, CV_64F),distCoeffs = Mat::eye(5, 1, CV_64F),
-    R = Mat::eye(3, 3, CV_64F),P = Mat::eye(3, 4, CV_64F),T = Mat::zeros(3,1,CV_64F);
+    Mat cameraMatrix = Mat::eye(3, 3, CV_64F),distCoeffs = Mat::eye(5, 1, CV_64F),R,P;
 
     // filling the calibration parameters from the params file
     paramsFile["K"] >> cameraMatrix;
     paramsFile["D"] >> distCoeffs;
-    paramsFile["R"] >> R;
-    paramsFile["P"] >> P;
+    
 
-    //computing the mapping function
+    VideoCapture cap;cap.open(pathToImages+"/"+params.cam_name);
+	if(!cap.isOpened()){
+        std::cerr << "could not open video or find images. exiting..." << std::endl;
+        exit(-1);
+    }else{
+    	params.image_size.height = cap.get(CAP_PROP_FRAME_HEIGHT);params.image_size.width = cap.get(CAP_PROP_FRAME_WIDTH);
+	}
+
+	//computing the mapping function
     Mat rmap[2];
     cv::initUndistortRectifyMap(cameraMatrix, distCoeffs, R, P, params.image_size, CV_16SC2, rmap[0], rmap[1]);
-
-    VideoCapture cap(pathToImages+"/"+params.cam_name);
-    params.image_size.height = cap.get(CAP_PROP_FRAME_HEIGHT);params.image_size.width = cap.get(CAP_PROP_FRAME_WIDTH);
 
     Mat img, rimg;
     cap >> img;
     while(!img.empty()){
-        remap(img, rimg, rmap[0], rmap[1], CV_INTER_LINEAR);
 
-        //creatign the name of the rectified image
+		//creatign the name of the rectified image
         stringstream ss;
-        ss << rectFolder << params.cam_name << setw(5) << setfill('0') << cap.get(CAP_PROP_POS_FRAMES)+1 << "_rec.png";
+        ss << rectFolder << params.cam_name << setw(5) << setfill('0') << cap.get(CAP_PROP_POS_FRAMES) << "_rec.png";
         string nameimg = ss.str();
         std::cout << "[Rectification] " << nameimg << "\r";cout.flush();
+		
+		remap(img, rimg, rmap[0], rmap[1], CV_INTER_LINEAR);
 
         //if display, display the rectified image, else save into a file
         if(params.display){
@@ -109,16 +115,18 @@ void mono_rectify(string pathToImages, string rectFolder, string filename,CalibP
             if(k == 'c') // if c is pressed, stop the acquisition
                 break;
         }
-        else
+        else{
             imwrite(nameimg.c_str(),rimg); //create the image using Matrix roi
+		}
+
         cap >> img;
     }
 
     if(!params.display)
-        std::cout<< "[Rectification] Retified images saved in: " << rectFolder <<endl;
+        std::cout<< endl << "[Rectification] Rectified images saved in: " << rectFolder << endl;
 }
 
-void mono_calibrateAndRectify(string pathToImages, string rectFolder, string paramsFile, CalibParams params){
+void mono_calibrateAndRectify(string pathToImages, string rectFolder, string paramsFile, CalibParams& params){
 
     mono_calibrate(pathToImages,paramsFile,params);
     mono_rectify(pathToImages,rectFolder,paramsFile,params);

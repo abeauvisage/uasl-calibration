@@ -4,7 +4,7 @@
 using namespace cv;
 using namespace std;
 
-void stereo_calibrate(std::string pathToImages, std::string filename, CalibParams params){
+void stereo_calibrate(std::string pathToImages, std::string filename, CalibParams& params){
 
     // replacing X in the camera name by 0 or 1.
     string left_images,right_images,left_fname,right_fname;
@@ -27,11 +27,11 @@ void stereo_calibrate(std::string pathToImages, std::string filename, CalibParam
 
     /**** Mono calibration for each camera ****/
 
-//    params.cam_name = params.cam_name.substr(0,found) + "0" + params.cam_name.substr(found+1,params.cam_name.size());
-//    mono_calibrate(pathToImages,left_fname,params);
-//    params.cam_name = params.cam_name.substr(0,found) + "1" + params.cam_name.substr(found+1,params.cam_name.size());
-//    mono_calibrate(pathToImages,right_fname,params);
-//    params.cam_name = params.cam_name.substr(0,found) + "X" + params.cam_name.substr(found+1,params.cam_name.size());
+    params.cam_name = params.cam_name.substr(0,found) + "0" + params.cam_name.substr(found+1,params.cam_name.size());
+    mono_calibrate(pathToImages,left_fname,params);
+    params.cam_name = params.cam_name.substr(0,found) + "1" + params.cam_name.substr(found+1,params.cam_name.size());
+    mono_calibrate(pathToImages,right_fname,params);
+    params.cam_name = params.cam_name.substr(0,found) + "X" + params.cam_name.substr(found+1,params.cam_name.size());
 
     Mat K0,K1,D0,D1,R,T,E,F;
     /**** find stereo corresponding features ****/
@@ -75,12 +75,13 @@ void stereo_calibrate(std::string pathToImages, std::string filename, CalibParam
     cout << "[Calibration] calibration params written." << endl;
 }
 
-void stereo_rectify(std::string pathToImages, std::string rectFolder, std::string filename, CalibParams params){
+void stereo_rectify(std::string pathToImages, std::string rectFolder, std::string filename, CalibParams& params){
 
     /**** read stereo params ****/
     Mat K0,K1,D0,D1,R,T,E,F;
     FileStorage intFile(filename, CV_STORAGE_READ);
-    FileStorage paramsFile(filename, CV_STORAGE_WRITE);
+	unsigned dot = filename.find_last_of(".");
+    FileStorage paramsFile(filename.substr(0,dot)+"_stereo.yml", CV_STORAGE_WRITE);
     intFile["K0"] >> K0;
 	intFile["D0"] >> D0;
 	intFile["K1"] >> K1;
@@ -97,7 +98,7 @@ void stereo_rectify(std::string pathToImages, std::string rectFolder, std::strin
 //	R.at<double>(0,2)= -0.005;//.013355;
 //	R.at<double>(2,0)= 0.005;//;.013355;
     /**** compute stereo rectified parameters ****/
-    cv::stereoRectify(K0, D0, K1, D1, params.image_size, R, T, R1, R2, P1, P2, Q,1,0, params.image_size, &validRoi[0], &validRoi[1]);
+    cv::stereoRectify(K0, D0, K1, D1, params.image_size, R, T, R1, R2, P1, P2, Q,0,-1, params.image_size, &validRoi[0], &validRoi[1]);
 	cout << "[Rectification] P1: " << endl << P1 << endl;
 	cout << "[Rectification] P2: " << endl << P2 << endl;
 
@@ -114,14 +115,12 @@ void stereo_rectify(std::string pathToImages, std::string rectFolder, std::strin
     /**** rectify and display the images ****/
 
     VideoCapture lcap,rcap;
-    cout << "[Rectification] cam name: " << params.cam_name << endl;
     unsigned found = params.cam_name.find_last_of("X");
     unsigned percent =  params.cam_name.find_last_of("%");
     if(found){
         lcap.open(pathToImages+"/"+params.cam_name.substr(0,found) + "0" + params.cam_name.substr(found+1,params.cam_name.size()));
         rcap.open(pathToImages+"/"+params.cam_name.substr(0,found) + "1" + params.cam_name.substr(found+1,params.cam_name.size()));
         params.image_size.height = lcap.get(CAP_PROP_FRAME_HEIGHT);params.image_size.width = lcap.get(CAP_PROP_FRAME_WIDTH);
-        cout << "[Rectification] image size: " << params.image_size << endl;
     }else{
 
         cerr << "[Rectification] could not identify variable X in camera name." << endl;
@@ -150,30 +149,31 @@ void stereo_rectify(std::string pathToImages, std::string rectFolder, std::strin
             string nameimg = ss.str();
             std::cout << nameimg.c_str() << endl;
             if(params.display){
-                Mat test = rimg.clone(),rtest;
-                cvtColor(test,rtest,CV_GRAY2BGR);
+                Mat test = rimg.clone();
+				if(test.channels() == 1)
+	                cvtColor(test,test,CV_GRAY2RGB);
                 for(int i = 10;i <test.rows;i+=10)
-                    line(rtest,cv::Point(0,i),cv::Point(test.cols-1,i),cv::Scalar(255,255,0));
+                    line(test,cv::Point(0,i),cv::Point(test.cols-1,i),cv::Scalar(255,255,0));
 
                 if(k){
-                    imshow("right",rtest);
+                    imshow("right",test);
                     imshow("orignalR",img[k]);
                 }
                 else{
-                    imshow("left",rtest);
+                    imshow("left",test);
                     imshow("originalL",img[k]);
                 }
             }else
                 imwrite(nameimg.c_str(),rimg); //create the image using Matrix roi
-            waitKey(0);
         }
+		waitKey(0);
         lcap >> img[0];
         rcap >> img[1];
     }
 }
 
 
-void stereo_calibrateAndRectify(string pathToImages, string rectFolder, string paramsFile, CalibParams params){
+void stereo_calibrateAndRectify(string pathToImages, string rectFolder, string paramsFile, CalibParams& params){
 
     stereo_calibrate(pathToImages,paramsFile,params);
     stereo_rectify(pathToImages,rectFolder,paramsFile,params);
