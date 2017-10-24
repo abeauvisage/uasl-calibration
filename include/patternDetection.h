@@ -26,7 +26,7 @@ struct CalibParams{
     cv::Size board_sz = cv::Size(8,6); //!< size of the calibartion pattern;
     cv::Size image_size = cv::Size(640,480); //!< size of the images.
     std::string cam_name=""; //!< name of the camera.
-    bool display=true; //!< display option. To display of save rectified images.
+    bool display=false; //!< display option. To display of save rectified images.
     int interval=1; //!< interval between to images.
 };
 

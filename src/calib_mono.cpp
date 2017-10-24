@@ -30,7 +30,7 @@ void mono_calibrate(string pathToImages, string filename, CalibParams& params){
     vector<Mat >rvecs,tvecs;
     double cm[9] ={500,0,params.image_size.width/2.0,0,500,params.image_size.height/2.0,0,0,1};
     Mat cameraMatrix(3, 3, CV_64F,cm);
-    distCoeffs = Mat::eye(5, 1, CV_64F);
+    distCoeffs = Mat::zeros(5, 1, CV_64F);
     R = Mat::eye(3, 3, CV_64F);
     P = Mat::eye(3, 4, CV_64F);
     T = Mat::zeros(3,1,CV_64F);
@@ -70,9 +70,11 @@ void mono_calibrate(string pathToImages, string filename, CalibParams& params){
 
 void mono_rectify(string pathToImages, string rectFolder, string filename,CalibParams& params){
 
-    FileStorage paramsFile(filename, FileStorage::READ);
+    FileStorage intFile(filename, FileStorage::READ);
+    unsigned dot = filename.find_last_of(".");
+    FileStorage paramsFile(filename.substr(0,dot)+"_rectified.yml", CV_STORAGE_WRITE);
     namedWindow("rectified",WINDOW_NORMAL);
-    if(!paramsFile.isOpened()){
+    if(!intFile.isOpened()){
         cerr << "[error] yml file could not be opened." << endl;
         exit(-1);
     }
@@ -80,11 +82,12 @@ void mono_rectify(string pathToImages, string rectFolder, string filename,CalibP
     Mat cameraMatrix = Mat::eye(3, 3, CV_64F),distCoeffs = Mat::eye(5, 1, CV_64F),R,P;
 
     // filling the calibration parameters from the params file
-    paramsFile["K"] >> cameraMatrix;
-    paramsFile["D"] >> distCoeffs;
-    
+    intFile["K"] >> cameraMatrix;
+    intFile["D"] >> distCoeffs;
+
 
     VideoCapture cap;cap.open(pathToImages+"/"+params.cam_name);
+    unsigned percent =  params.cam_name.find_last_of("%");
 	if(!cap.isOpened()){
         std::cerr << "could not open video or find images. exiting..." << std::endl;
         exit(-1);
@@ -96,22 +99,34 @@ void mono_rectify(string pathToImages, string rectFolder, string filename,CalibP
     Mat rmap[2];
     cv::initUndistortRectifyMap(cameraMatrix, distCoeffs, R, P, params.image_size, CV_16SC2, rmap[0], rmap[1]);
 
+//    cout << cameraMatrix << distCoeffs << endl;
+//
+//    if( paramsFile.isOpened() )
+//    {
+//        paramsFile << "R" << R << "P" << P;
+//        paramsFile.release();
+//    }
+//    else{
+//		std::cerr << "[error] can not save the calibration parameters\n";
+//		exit(-1);
+//    }
+
     Mat img, rimg;
     cap >> img;
     while(!img.empty()){
 
 		//creatign the name of the rectified image
         stringstream ss;
-        ss << rectFolder << params.cam_name << setw(5) << setfill('0') << cap.get(CAP_PROP_POS_FRAMES) << "_rec.png";
+        ss << rectFolder << params.cam_name.substr(0,percent) << setw(5) << setfill('0') << cap.get(CAP_PROP_POS_FRAMES) << "_rec.png";
         string nameimg = ss.str();
         std::cout << "[Rectification] " << nameimg << "\r";cout.flush();
-		
+
 		remap(img, rimg, rmap[0], rmap[1], CV_INTER_LINEAR);
 
         //if display, display the rectified image, else save into a file
         if(params.display){
             imshow("rectified",rimg);
-            char k = waitKey();
+            char k = waitKey(100);
             if(k == 'c') // if c is pressed, stop the acquisition
                 break;
         }
