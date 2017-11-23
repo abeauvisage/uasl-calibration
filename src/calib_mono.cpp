@@ -79,7 +79,7 @@ void mono_rectify(string pathToImages, string rectFolder, string filename,CalibP
         exit(-1);
     }
 
-    Mat cameraMatrix = Mat::eye(3, 3, CV_64F),distCoeffs = Mat::eye(5, 1, CV_64F),R,P;
+    Mat cameraMatrix = Mat::eye(3, 3, CV_64F),distCoeffs = Mat::eye(5, 1, CV_64F);
 
     // filling the calibration parameters from the params file
     intFile["K"] >> cameraMatrix;
@@ -97,19 +97,20 @@ void mono_rectify(string pathToImages, string rectFolder, string filename,CalibP
 
 	//computing the mapping function
     Mat rmap[2];
-    cv::initUndistortRectifyMap(cameraMatrix, distCoeffs, R, P, params.image_size, CV_16SC2, rmap[0], rmap[1]);
+    Mat new_cameraMatrix = getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, params.image_size, 0, params.image_size, 0);
+    cv::initUndistortRectifyMap(cameraMatrix, distCoeffs, Mat(),new_cameraMatrix, params.image_size, CV_16SC2, rmap[0], rmap[1]);
 
 //    cout << cameraMatrix << distCoeffs << endl;
 //
-//    if( paramsFile.isOpened() )
-//    {
-//        paramsFile << "R" << R << "P" << P;
-//        paramsFile.release();
-//    }
-//    else{
-//		std::cerr << "[error] can not save the calibration parameters\n";
-//		exit(-1);
-//    }
+    if( paramsFile.isOpened() )
+    {
+        paramsFile << "K" << new_cameraMatrix << "D" << distCoeffs;
+        paramsFile.release();
+    }
+    else{
+		std::cerr << "[error] can not save the calibration parameters\n";
+		exit(-1);
+    }
 
     Mat img, rimg;
     cap >> img;
