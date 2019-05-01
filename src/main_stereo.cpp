@@ -108,11 +108,11 @@ int main(int argc, char** argv){
     d = opendir(pathToImages.c_str());
 	if (d == NULL)
 	{
-		std::cerr << "[error] no valid directory specified." << std::endl;
-		std::cerr << pathToImages << std::endl;
+		std::cerr << "[error] " << pathToImages << " is not a valid directory" << std::endl;
 		exit(-1);
 	}else
-        std::cout << "[init] directory found" << std::endl;
+        std::cout << "[init] directory found: " << pathToImages << std::endl;
+        std::cout <<  << std::endl;
 
     /**** Creating the new folder containing the rectified images ****/
 
