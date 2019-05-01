@@ -2,8 +2,11 @@
 #include <Windows.h>
 #endif
 
-#include "calib_stereo.h"
+#include <sys/stat.h>
+#include "wingetopt.h"
 #include "dirent.h"
+
+#include "calib_stereo.h"
 
 using namespace cv;
 using namespace std;
@@ -112,7 +115,6 @@ int main(int argc, char** argv){
 		exit(-1);
 	}else
         std::cout << "[init] directory found: " << pathToImages << std::endl;
-        std::cout <<  << std::endl;
 
     /**** Creating the new folder containing the rectified images ****/
 

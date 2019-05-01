@@ -1,9 +1,6 @@
 #ifndef CALIB_STEREO_H_INCLUDED
 #define CALIB_STEREO_H_INCLUDED
 
-#include <sys/stat.h>
-#include "wingetopt.h"
-
 #include "patternDetection.h"
 
 //! Calibrate from the provided images.
