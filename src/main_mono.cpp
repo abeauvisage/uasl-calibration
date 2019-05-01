@@ -47,13 +47,13 @@ int main(int argc, char** argv){
 	{
 		switch (c)
 		{
-        case 'n':
+        case 'n': // minimum nb of images to perform calibration
             params.MIN_IMAGES = stof(optarg);
             break;
-        case 'i':
+        case 'i': // interval at which images are read (useful if images were acquired at high rate)
             params.interval = stof(optarg);
             break;
-        case 'm':
+        case 'm': // max mean reprojection error to accept calibration
             params.MAX_MRE = stof(optarg);
             break;
         case 'p':
@@ -66,17 +66,17 @@ int main(int argc, char** argv){
             if(string(optarg)=="acircles")
                 params.calib_pattern = Pattern::ASYMMETRIC_CIRCLES_GRID;
             break;
-        case 'e':
+        case 'e': // size of the calibration pattern elements (for chessboard and circles)
             params.element_size = stof(optarg);
             break;
-        case 'h':
+        case 'h': // stop and display help guide
 		case 'H':
 			usage();
 			return 1;
-        case 'd':
+        case 'd': // display images if option is set, save images otherwise
             params.display=true;
             break;
-        case 'c':
+        case 'c': // run calibration and rectify images when option is set. Only rectify images otherwise
             calibration=true;
             break;
 		default:
@@ -86,6 +86,7 @@ int main(int argc, char** argv){
 		}
 	}
 
+    //check folder, camera name and config file have been provided
 	if(pathToImages==""){
         cerr << "[error] no input file provided." << endl;
         usage();
@@ -104,6 +105,7 @@ int main(int argc, char** argv){
         exit(-1);
 	}
 
+	//check that the folder provided is valid
     DIR *d = NULL;
     d = opendir(pathToImages.c_str());
 	if (d == NULL)
