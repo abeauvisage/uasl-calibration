@@ -42,6 +42,32 @@ bool findOrigin(const cv::Point2f& pt1, const cv::Point2f& pt2){
     return !minIdx;
 }
 
+//! refine blob centre detection. It is assumed that 2D feature follow a normal distribution. It does not take into account distortions due to projections.
+void refineCentreDetection(const cv::Mat& img, std::vector<cv::KeyPoint>& keypoints){
+
+    for(cv::KeyPoint& kp : keypoints){
+        // defining window around feature
+        int win_size = 2*kp.size;
+        cv::Rect win_rect(kp.pt.x-win_size/2,kp.pt.y-win_size/2,win_size+1,win_size+1);
+        if(!(win_rect.x >0) || !(win_rect.y > 0) || win_rect.x+win_size+1>img.cols-1 || win_rect.y+win_size+1>img.rows-1) //if window is out of boundaries skip refinement
+            continue;
+        cv::Mat window = img(win_rect);
+        // computing of pixels sample
+        double x_mean=0,y_mean=0,weight_x=0,weight_y=0;
+        for(int i=0;i<win_size;i++){
+                x_mean += sum(window.col(i))[0] * (i+1);
+                y_mean += sum(window.row(i))[0] * (i+1);
+                weight_x += sum(window.col(i))[0];
+                weight_y += sum(window.row(i))[0];
+            }
+            x_mean /= weight_x;
+            y_mean /= weight_y;
+        // -0.5 to centre pixels and because started at 1
+        kp.pt.x = win_rect.x-0.5+x_mean;
+        kp.pt.y = win_rect.y-0.5+y_mean;
+    }
+}
+
 void calcPatternPosition(std::vector<cv::Point3f>& corners,CalibParams& params)
 {
     corners.clear();
@@ -68,7 +94,6 @@ void calcPatternPosition(std::vector<cv::Point3f>& corners,CalibParams& params)
             corners.push_back(cv::Point3f(0.375,0.330,0));
             corners.push_back(cv::Point3f(0.525,0.150,0));
             corners.push_back(cv::Point3f(0.225,0.150,0));
-
             //bottom right
             corners.push_back(cv::Point3f(0.600,0.000,0));
             corners.push_back(cv::Point3f(0.750,0.000,0));
@@ -90,7 +115,6 @@ void calcPatternPosition(std::vector<cv::Point3f>& corners,CalibParams& params)
 }
 
 void drawPyramidPattern(cv::Mat& img, std::vector<cv::Point2f>& centers, bool found){
-
 
     cv::line(img, meanPT, meanPT+cv::Point2f(0,10), cv::Scalar(0,255,0), 1, CV_AA);
     cv::line(img, meanPT, meanPT+cv::Point2f(10,0), cv::Scalar(0,255,0), 1, CV_AA);
@@ -172,6 +196,8 @@ bool findPyramid(const cv::Mat& img, std::vector<cv::Point2f>& centers){
     if(keypoints.size() != 18)
         return false;
 
+    refineCentreDetection(img,keypoints);
+
     /**** finding center of the pattern ****/
      meanPT = cv::Point2f(0,0);
 
@@ -252,7 +278,7 @@ std::vector<std::vector<cv::Point2f>> findPattern(const std::string& pathToImage
 
         /**** detecting the calibration pattern ****/
         std::vector<cv::Point2f> corners;
-        bool found;
+        bool found=false;
         switch(params.calib_pattern){
             case Pattern::CHESSBOARD:
                 found = cv::findChessboardCorners(rimg, params.board_sz, corners, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS);break;
@@ -295,6 +321,7 @@ std::vector<std::vector<cv::Point2f>> findPattern(const std::string& pathToImage
             cap >> img;
     }
 	cap.release();
+	cv::destroyAllWindows();
     return imagePoints;
 }
 
@@ -330,7 +357,7 @@ void findPatternStereo(const std::string& pathToImages, std::vector<std::vector<
             cv::cvtColor(rimg, crimg, cv::COLOR_GRAY2BGR);
 
         std::vector<cv::Point2f> lcorners,rcorners;
-        bool lfound,rfound;
+        bool lfound=false,rfound=false;
         /**** detecting the calibration pattern ****/
         switch(params.calib_pattern){
             case Pattern::CHESSBOARD:
@@ -383,6 +410,7 @@ void findPatternStereo(const std::string& pathToImages, std::vector<std::vector<
             cap_right >> rimg;
         }
     }
+    cv::destroyAllWindows();
 }
 
 double computeMRE(const std::vector<std::vector<cv::Point3f>>& objectPoints, const std::vector<std::vector<cv::Point2f>>& imagePts, const std::vector<cv::Mat>& rvecs, const std::vector<cv::Mat>& tvecs, const cv::Mat& K, const cv::Mat& dist, std::vector<double>& repValues){

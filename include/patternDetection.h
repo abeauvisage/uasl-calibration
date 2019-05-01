@@ -14,7 +14,7 @@
 #include <iostream>
 
 //! Different patterns available
-enum Pattern{CHESSBOARD,CIRCLES_GRID,ASYMMETRIC_CIRCLES_GRID,PYRAMID};
+enum class Pattern{CHESSBOARD,CIRCLES_GRID,ASYMMETRIC_CIRCLES_GRID,PYRAMID};
 
 //! Structure for saving calibration parameters
 struct CalibParams{
@@ -22,7 +22,8 @@ struct CalibParams{
     Pattern calib_pattern=Pattern::CHESSBOARD; //!< type of pattern used for calibrating.
     float element_size=0.002; //!< size of the elements (square size, circle size, etc...).
     float MAX_MRE=0.5; //!< MRE threshold for stopping optimization.
-    float MIN_IMAGES=15; //!< minimum nb of images to be considered, if lower, optimization stops.
+    unsigned int MAX_IMAGES=90; //!< maximum nb of images to be processed. It is used to avoid dealing with too many images and wait for hours.
+    unsigned int MIN_IMAGES=20; //!< minimum nb of images to be considered, if lower, optimization stops.
     cv::Size board_sz = cv::Size(8,6); //!< size of the calibartion pattern;
     cv::Size image_size = cv::Size(640,480); //!< size of the images.
     std::string cam_name=""; //!< name of the camera.
@@ -40,6 +41,8 @@ bool sortAngle(cv::Point2f kpt1, cv::Point2f kpt2);
 bool sortAnglePyr(cv::Point2f kpt1, cv::Point2f kpt2);
 //! Sorting function. Helps to find the top of the pyramid.
 bool findOrigin(const cv::Point2f& pt1, const cv::Point2f& pt2);
+//! refine blob centre detection. It is assumed that 2D feature follow a normal distribution. It does not take into account distortions due to projections.
+void refineCentreDetection(const cv::Mat& img, std::vector<cv::KeyPoint>& keypoints);
 //! Calculates the 3D location of the features forming the calibration pattern
 /*! Input: - params, set of calibration parameters.
     Ouput: - corners, the vector of 3D features.*/
