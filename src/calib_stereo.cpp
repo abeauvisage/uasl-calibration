@@ -26,12 +26,13 @@ void stereo_calibrate(std::string pathToImages, std::string filename, CalibParam
     }
 
     /**** Mono calibration for each camera ****/
-
-    params.cam_name = params.cam_name.substr(0,found) + "0" + params.cam_name.substr(found+1,params.cam_name.size());
-    mono_calibrate(pathToImages,left_fname,params);
-    params.cam_name = params.cam_name.substr(0,found) + "1" + params.cam_name.substr(found+1,params.cam_name.size());
-    mono_calibrate(pathToImages,right_fname,params);
-    params.cam_name = params.cam_name.substr(0,found) + "X" + params.cam_name.substr(found+1,params.cam_name.size());
+    if(!params.skip_mono_calib){
+        params.cam_name = params.cam_name.substr(0,found) + "0" + params.cam_name.substr(found+1,params.cam_name.size());
+        mono_calibrate(pathToImages,left_fname,params);
+        params.cam_name = params.cam_name.substr(0,found) + "1" + params.cam_name.substr(found+1,params.cam_name.size());
+        mono_calibrate(pathToImages,right_fname,params);
+        params.cam_name = params.cam_name.substr(0,found) + "X" + params.cam_name.substr(found+1,params.cam_name.size());
+    }
 
     /**** reading intrinsic parameters ****/
 

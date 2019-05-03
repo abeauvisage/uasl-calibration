@@ -27,6 +27,7 @@ struct CalibParams{
     std::string cam_name=""; //!< name of the camera.
     bool display=false; //!< display option. To display of save rectified images.
     int interval=1; //!< interval between to images.
+    bool skip_mono_calib = false;
 };
 
 //! Sorting function. Sorts keypoints by distance to the centre of the pattern.

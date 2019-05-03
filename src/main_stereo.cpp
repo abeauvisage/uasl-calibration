@@ -46,7 +46,7 @@ int main(int argc, char** argv){
 	string pathToImages=argv[1],rectFolder="",ymlPath=argv[3];
 	params.cam_name=argv[2];
 
-	while ((c = getopt(argc, argv, "n:i:m:p:e:h:cdHh")) != -1)
+	while ((c = getopt(argc, argv, "n:i:m:p:e:h:cdHhM")) != -1)
 	{
 		switch (c)
 		{
@@ -58,6 +58,9 @@ int main(int argc, char** argv){
             break;
         case 'm':
             params.MAX_MRE = stof(optarg);
+            break;
+        case 'M':
+            params.skip_mono_calib = true;
             break;
         case 'p':
             if(string(optarg)=="chessboard")
