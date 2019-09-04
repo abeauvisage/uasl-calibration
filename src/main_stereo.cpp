@@ -31,6 +31,8 @@ static void usage()
 	cout << "   -d     display rectified images, otherwise save them." << endl;
 	cout << "   -c     calibrate and rectify with the provided images." << endl;
 	cout << "   -i     interval rate at which images are processed." << endl;
+	cout << "   -s	   specify size of the images." << endl;
+
 }
 
 int main(int argc, char** argv){
@@ -46,7 +48,7 @@ int main(int argc, char** argv){
 	string pathToImages=argv[1],rectFolder="",ymlPath=argv[3];
 	params.cam_name=argv[2];
 
-	while ((c = getopt(argc, argv, "n:i:m:p:e:h:cdHhM")) != -1)
+	while ((c = getopt(argc, argv, "n:i:m:p:e:h:s:cdHhM")) != -1)
 	{
 		switch (c)
 		{
@@ -76,6 +78,14 @@ int main(int argc, char** argv){
             params.element_size = stof(optarg);
             break;
         case 'h':
+		case 's':
+		{
+			string img_size{optarg};
+			unsigned int x = img_size.find_last_of("x");
+			params.image_size.width = stoi(img_size.substr(0,x));
+			params.image_size.height = stoi(img_size.substr(x+1,img_size.size()));
+			break;
+		}
 		case 'H':
 			usage();
 			return 1;
